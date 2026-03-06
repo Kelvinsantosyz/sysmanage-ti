@@ -1,0 +1,16 @@
+body {
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+}
+
+.card {
+  border-radius: 15px;
+}
+
+.btn-primary {
+  background-color: #2a5298;
+  border: none;
+}
+
+.btn-primary:hover {
+  background-color: #1e3c72;
+}

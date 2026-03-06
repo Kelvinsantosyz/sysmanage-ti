@@ -1,0 +1,5 @@
+-- Obrigar alteração de senha no primeiro login
+-- Execute no MySQL para ativar a funcionalidade:
+-- ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 1;
+-- Usuários já existentes: para não forçar troca, atualize depois:
+-- UPDATE users SET must_change_password = 0;

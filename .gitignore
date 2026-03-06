@@ -1,0 +1,38 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (nunca commitar senhas e chaves)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Build / saída
+dist/
+build/
+coverage/
+*.exe
+
+# Go (agent) - binário compilado
+sysmanage-ti/agent/agent
+sysmanage-ti/agent/*.exe
+
+# Temporários
+tmp/
+temp/
+.cache/

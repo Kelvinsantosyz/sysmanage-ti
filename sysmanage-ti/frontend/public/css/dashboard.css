@@ -1,0 +1,53 @@
+body{
+    background-color: #f4f6f9;
+    display: flex;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width: 240px;
+    height: 100vh;
+    background-color: #111827;
+    position: fixed;
+    padding: 20px;
+}
+
+.sidebar a{
+    display: block;
+    color: #cbd5e1;
+    padding: 10px;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    transition: 0.2s;
+}
+
+.sidebar a:hover{
+    background-color: #1f2937;
+    color: white;
+}
+
+.sidebar a.nav-link.active{
+    background-color: #2563eb;
+    color: white;
+}
+
+/* MAIN */
+.main{
+    margin-left: 240px;
+    width: 100%;
+}
+
+.dashboard-card{
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.dashboard-card h6{
+    color: #6b7280;
+}
+
+.dashboard-card h3{
+    font-weight: bold;
+}

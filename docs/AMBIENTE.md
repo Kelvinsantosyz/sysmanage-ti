@@ -1,11 +1,14 @@
+---
+
 # Ambiente e banco de dados
 
-Guia para configurar o ambiente de desenvolvimento e o MySQL.
+Este guia descreve como configurar o ecossistema necessário para executar o **SysManage TI**.
 
 ## Variáveis de ambiente (backend)
 
-Crie o arquivo `sysmanage-ti/backend/.env` (nunca commitar). Exemplo:
+Crie um arquivo chamado `.env` na raiz da pasta `sysmanage-ti/backend/`. **Este arquivo contém informações sensíveis e não deve ser versionado**.
 
+### Exemplo de `.env`
 ```env
 DB_HOST=localhost
 DB_PORT=3306
@@ -16,78 +19,53 @@ JWT_SECRET=uma_chave_longa_e_aleatoria_aqui
 PORT=3000
 ```
 
-| Variável    | Descrição                          |
-|-------------|------------------------------------|
-| DB_HOST     | Host do MySQL                      |
-| DB_PORT     | Porta (geralmente 3306)            |
-| DB_USER     | Usuário do banco                   |
-| DB_PASS     | Senha do usuário                   |
-| DB_NAME     | Nome do banco                      |
-| JWT_SECRET  | Chave para assinar/validar o JWT    |
-| PORT        | Porta do servidor Node (padrão 3000) |
+| Variável | Descrição |
+| :--- | :--- |
+| **DB_HOST** | Endereço do servidor MySQL. |
+| **DB_PORT** | Porta de conexão (padrão 3306). |
+| **DB_USER** | Usuário com permissões no banco de dados. |
+| **DB_PASS** | Senha do usuário do banco. |
+| **DB_NAME** | Nome da base de dados criada para o projeto. |
+| **JWT_SECRET** | Chave para assinatura dos tokens e cookies de sessão. |
+| **PORT** | Porta onde o servidor Node.js será executado. |
 
-**Dica:** use um `.env.example` só com chaves sem valores e documente no README; o `.env` real fica no `.gitignore`.
+---
 
-## MySQL — criação do banco
+## MySQL — Preparação do Banco
+
+Siga os passos abaixo para criar o banco de dados e o usuário no seu servidor MySQL:
 
 ```sql
+-- 1. Criar o banco de dados
 CREATE DATABASE sysmanage_ti CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'sysmanage'@'localhost' IDENTIFIED BY 'sua_senha';
+
+-- 2. Criar o usuário (ajuste a senha conforme o seu .env)
+CREATE USER 'sysmanage'@'localhost' IDENTIFIED BY 'sua_senha_segura';
+
+-- 3. Dar permissões ao usuário
 GRANT ALL PRIVILEGES ON sysmanage_ti.* TO 'sysmanage'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-Ajuste usuário/senha conforme o `.env`.
+---
 
-## Scripts SQL (backend)
+## Scripts SQL (Ordem de Execução)
 
-Pasta: `sysmanage-ti/backend/sql/`.
+Execute os scripts localizados em `backend/sql/` na seguinte ordem para garantir a integridade das relações:
 
-Execute na ordem que fizer sentido para o seu banco:
+1.  **Tabela `users`**: Armazena os usuários do painel administrativo, suas senhas (hash) e níveis de permissão (`role`).
+2.  **Tabela `setores`**: Gerencia as localizações físicas e lógicas que serão listadas nos cadastros.
+3.  **Tabela `colaboradores`**: Cadastro dos funcionários da empresa.
+4.  **Tabela `assets`**: Inventário consolidado de hardware e licenciamento de software.
 
-1. **Tabela `users`**  
-   Deve existir com pelo menos: `id`, `name`, `email`, `password`.  
-   Exemplo mínimo:
-   ```sql
-   CREATE TABLE IF NOT EXISTS users (
-     id INT AUTO_INCREMENT PRIMARY KEY,
-     name VARCHAR(100) NOT NULL,
-     email VARCHAR(255) NOT NULL UNIQUE,
-     password VARCHAR(255) NOT NULL
-   );
-   ```
+---
 
-2. **`002_users_first_login.sql`**  
-   Adiciona `must_change_password` para obrigar troca de senha no primeiro login:
-   ```sql
-   ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 1;
-   ```
+## Checklist de Instalação
 
-3. **`001_colaboradores.sql`**  
-   Cria a tabela `colaboradores` (nome, função, telefone, cpf, data_nascimento, setor, status).
+* [ ] **Node.js**: Versão 18 ou superior instalada.
+* [ ] **MySQL**: Instância ativa e acessível.
+* [ ] **Dependências**: Executado `npm install` na pasta do backend.
+* [ ] **Variáveis**: Arquivo `.env` configurado corretamente.
+* [ ] **Execução**: Servidor iniciado via `npm run dev` ou `node server.js`.
 
-4. **Tabela `assets`**  
-   Mínimo: `id`, `name`, `type`, `status`. Opcionais (ALTER na mesma pasta ou em comentários nos arquivos):
-   - `setor`
-   - `patrimonio`, `numero_serie`
-
-O backend se adapta à existência dessas colunas (usa `SHOW COLUMNS` onde necessário).
-
-## Agent (Go) — variáveis opcionais
-
-Ao rodar o agent nas máquinas:
-
-| Variável               | Descrição                          | Exemplo                    |
-|------------------------|------------------------------------|----------------------------|
-| AGENT_SERVER_URL       | URL do endpoint de métricas        | `http://servidor:3000/api/agent/metrics` |
-| AGENT_INTERVAL_SECONDS | Intervalo entre envios (segundos)  | `5`                        |
-| AGENT_DISK_PATH        | Caminho do disco para métrica      | `C:\` (Windows) ou `/`     |
-
-## Checklist rápido
-
-- [ ] Node.js 18+ instalado  
-- [ ] MySQL rodando, banco e usuário criados  
-- [ ] Scripts SQL executados (users, colaboradores, assets, opcionais)  
-- [ ] `sysmanage-ti/backend/.env` criado com DB_* e JWT_SECRET  
-- [ ] `npm install` e `npm run dev` no backend  
-- [ ] Acesso a `http://localhost:3000` e login funcionando  
+---

@@ -1,3 +1,5 @@
+
+```markdown
 ---
 
 # Ambiente e banco de dados
@@ -45,18 +47,68 @@ CREATE USER 'sysmanage'@'localhost' IDENTIFIED BY 'sua_senha_segura';
 -- 3. Dar permissões ao usuário
 GRANT ALL PRIVILEGES ON sysmanage_ti.* TO 'sysmanage'@'localhost';
 FLUSH PRIVILEGES;
+
+-- 4. Selecionar o banco
+USE sysmanage_ti;
 ```
 
 ---
 
-## Scripts SQL (Ordem de Execução)
+## Scripts SQL (Criação das Tabelas)
 
-Execute os scripts localizados em `backend/sql/` na seguinte ordem para garantir a integridade das relações:
+Execute a criação das tabelas **exatamente nesta ordem**, pois a tabela `assets` depende da tabela `colaboradores` (Chave Estrangeira).
 
-1.  **Tabela `users`**: Armazena os usuários do painel administrativo, suas senhas (hash) e níveis de permissão (`role`).
-2.  **Tabela `setores`**: Gerencia as localizações físicas e lógicas que serão listadas nos cadastros.
-3.  **Tabela `colaboradores`**: Cadastro dos funcionários da empresa.
-4.  **Tabela `assets`**: Inventário consolidado de hardware e licenciamento de software.
+### 1. Tabela de Usuários (Acesso ao Sistema)
+Armazena os usuários do painel administrativo, suas senhas (hash) e níveis de permissão (`role`).
+
+```sql
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(120) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    must_change_password TINYINT(1) DEFAULT 0,
+    role VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 2. Tabela de Colaboradores (Funcionários/RH)
+Cadastro dos funcionários da empresa que serão responsáveis pelas máquinas ou licenças.
+
+```sql
+CREATE TABLE colaboradores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    funcao VARCHAR(100),
+    cpf VARCHAR(20) UNIQUE,
+    telefone VARCHAR(20),
+    data_nascimento DATE,
+    setor VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'Ativo'
+);
+```
+
+### 3. Tabela de Ativos (Hardwares e Softwares)
+Inventário consolidado de máquinas físicas e licenciamento de software.
+
+```sql
+CREATE TABLE assets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    nome VARCHAR(100) NOT NULL,
+    status VARCHAR(20),
+    setor VARCHAR(100),
+    patrimonio VARCHAR(100),
+    numero_serie VARCHAR(100),
+    fabricante VARCHAR(100),
+    versao VARCHAR(50),
+    chave_licenca VARCHAR(255),
+    data_expiracao DATE,
+    colaborador_id INT,
+    FOREIGN KEY (colaborador_id) REFERENCES colaboradores(id) ON DELETE SET NULL
+);
+```
 
 ---
 
@@ -65,7 +117,9 @@ Execute os scripts localizados em `backend/sql/` na seguinte ordem para garantir
 * [ ] **Node.js**: Versão 18 ou superior instalada.
 * [ ] **MySQL**: Instância ativa e acessível.
 * [ ] **Dependências**: Executado `npm install` na pasta do backend.
+* [ ] **Banco de Dados**: Comandos de criação de banco, usuário e tabelas executados.
 * [ ] **Variáveis**: Arquivo `.env` configurado corretamente.
 * [ ] **Execução**: Servidor iniciado via `npm run dev` ou `node server.js`.
 
 ---
+```

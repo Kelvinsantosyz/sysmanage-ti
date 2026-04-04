@@ -88,7 +88,7 @@ app.post('/api/login', async (req, res) => {
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, SECRET, { expiresIn: "8h" })
     res.cookie('token', token, { httpOnly: true, secure: false, sameSite: 'strict', path: '/', maxAge: 8 * 60 * 60 * 1000 })
     
-    // Retorna a role para o frontend aplicar as permissões
+   
     res.json({ mustChangePassword: user.must_change_password === 1, user: { id: user.id, name: user.name, role: user.role } })
   } catch (err) {
     res.status(500).json({ error: "Erro no login" })
@@ -157,30 +157,38 @@ app.get('/api/assets/:id', authMiddleware, async (req, res) => {
 
 app.post('/api/assets', authMiddleware, async (req, res) => {
   try {
-    const { nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, data_expiracao } = req.body;
+   
+    const { nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, data_expiracao, colaborador_id } = req.body;
     const expFormatada = (!data_expiracao || data_expiracao.trim() === "") ? null : data_expiracao;
+    const colabIdFinal = colaborador_id ? Number(colaborador_id) : null;
 
     const [result] = await db.query(
-      "INSERT INTO assets (nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, data_expiracao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-      [nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, expFormatada]
+      "INSERT INTO assets (nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, data_expiracao, colaborador_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      [nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, expFormatada, colabIdFinal]
     )
     res.json({ success: true, id: result.insertId })
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Erro ao criar ativo" })
   }
 })
 
 app.put('/api/assets/:id', authMiddleware, async (req, res) => {
   try {
-    const { nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, data_expiracao } = req.body;
+   
+    const { nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, data_expiracao, colaborador_id } = req.body;
     const expFormatada = (!data_expiracao || data_expiracao.trim() === "") ? null : data_expiracao;
+    const colabIdFinal = colaborador_id ? Number(colaborador_id) : null;
 
     await db.query(
-      "UPDATE assets SET nome=?, type=?, patrimonio=?, numero_serie=?, status=?, setor=?, fabricante=?, versao=?, chave_licenca=?, data_expiracao=? WHERE id=?",
-      [nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, expFormatada, req.params.id]
+      "UPDATE assets SET nome=?, type=?, patrimonio=?, numero_serie=?, status=?, setor=?, fabricante=?, versao=?, chave_licenca=?, data_expiracao=?, colaborador_id=? WHERE id=?",
+      [nome, type, patrimonio, numero_serie, status, setor, fabricante, versao, chave_licenca, expFormatada, colabIdFinal, req.params.id]
     )
     res.json({ success: true })
-  } catch (err) { res.status(500).json({ error: "Erro ao atualizar ativo" }) }
+  } catch (err) { 
+    console.error(err);
+    res.status(500).json({ error: "Erro ao atualizar ativo" }) 
+  }
 })
 
 app.delete('/api/assets/:id', authMiddleware, async (req, res) => {

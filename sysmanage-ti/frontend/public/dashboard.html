@@ -1,230 +1,228 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SysManage TI - Dashboard</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/dashboard.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysManage TI - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Pequenos ajustes para deixar as tabelas mais limpas */
+        .table-responsive { border-radius: 0.375rem; }
+        .table > :not(caption) > * > * { padding: 0.75rem 1rem; }
+        .btn-group .btn { padding: 0.25rem 0.75rem; font-size: 0.85rem; }
+    </style>
 </head>
-<body>
+<body class="bg-light">
 
-<div class="sidebar">
-    <h4 class="text-center text-white mb-4">SysManage TI</h4>
-    <a href="#resumo" class="nav-link active" data-view="resumo">Dashboard</a>
-    <a href="#colaboradores" class="nav-link" data-view="colaboradores">Colaboradores</a>
-    <a href="#maquinas" class="nav-link" data-view="maquinas">Máquinas</a>
-    <a href="#inventario" class="nav-link" data-view="inventario">Inventário</a>
-    <a href="#softwares" class="nav-link" data-view="softwares">Softwares</a>
-    <a href="#relatorios" class="nav-link" data-view="relatorios">Relatórios</a>
-</div>
-
-<div class="main">
-<nav class="navbar navbar-light bg-white shadow-sm mb-4 px-4">
-    <span class="navbar-brand mb-0 h5">Painel Administrativo</span>
-    <div class="d-flex align-items-center gap-2">
-        <span id="userName" class="fw-semibold"></span>
-        <a href="change-password.html" class="btn btn-outline-secondary btn-sm">Alterar senha</a>
-        <button class="btn btn-danger btn-sm" onclick="logout()">Logout</button>
+    <div class="sidebar">
+        <h4 class="text-center text-white mb-4 fw-bold">SysManage TI</h4>
+        <a href="#resumo" class="nav-link active" data-view="resumo">📊 Dashboard</a>
+        <a href="#colaboradores" class="nav-link" data-view="colaboradores">👥 Colaboradores</a>
+        <a href="#maquinas" class="nav-link" data-view="maquinas">💻 Máquinas</a>
+        <a href="#inventario" class="nav-link" data-view="inventario">📦 Inventário</a>
+        <a href="#softwares" class="nav-link" data-view="softwares">💿 Softwares</a>
+        <a href="#setores" class="nav-link" data-view="setores">🏢 Setores</a>
+        <a href="#relatorios" class="nav-link" data-view="relatorios">📑 Relatórios</a>
     </div>
-</nav>
 
-<div class="container-fluid">
+    <div class="main">
+        <nav class="navbar navbar-light bg-white shadow-sm mb-4 px-4 border-bottom">
+            <span class="navbar-brand mb-0 h5 text-secondary">Painel Administrativo</span>
+            <div class="d-flex align-items-center gap-2">
+                <span id="userName" class="fw-semibold d-flex align-items-center text-dark"></span>
+                <a href="change-password.html" class="btn btn-outline-secondary btn-sm ms-3 rounded-pill">🔐 Alterar senha</a>
+                <button class="btn btn-danger btn-sm rounded-pill px-3" onclick="logout()">Sair</button>
+            </div>
+        </nav>
 
-<!-- Painel: Resumo (Dashboard) com Ativos/Inativos e por Setor -->
-<section id="painel-resumo" class="dashboard-panel" data-panel="resumo">
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <h6>Total de Máquinas</h6>
-                    <h3 id="totalMachines">0</h3>
+        <div class="container-fluid pb-4">
+
+            <section id="painel-resumo" class="dashboard-panel" data-panel="resumo">
+                <h5 class="mb-4 text-secondary border-start border-4 border-primary ps-3">Visão Geral</h5>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3"><div class="card dashboard-card shadow-sm border-0 border-top border-primary border-4"><div class="card-body"><h6 class="text-muted mb-3">💻 Total de Máquinas</h6><h2 id="totalMachines" class="mb-0 fw-bold text-dark">0</h2></div></div></div>
+                    <div class="col-md-3"><div class="card dashboard-card shadow-sm border-0 border-top border-info border-4"><div class="card-body"><h6 class="text-muted mb-3">💿 Total de Softwares</h6><h2 id="totalSoftwares" class="mb-0 fw-bold text-dark">0</h2></div></div></div>
+                    <div class="col-md-3"><div class="card dashboard-card shadow-sm border-0 border-top border-success border-4"><div class="card-body"><h6 class="text-muted mb-3">✅ Ativos em Uso</h6><h2 id="totalAtivos" class="mb-0 fw-bold text-success">0</h2></div></div></div>
+                    <div class="col-md-3"><div class="card dashboard-card shadow-sm border-0 border-top border-warning border-4"><div class="card-body"><h6 class="text-muted mb-3">📦 Estoque / Inativos</h6><h2 id="totalInativos" class="mb-0 fw-bold text-warning">0</h2></div></div></div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <h6>Total de Softwares</h6>
-                    <h3 id="totalSoftwares">0</h3>
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6"><div class="card shadow-sm border-0 h-100"><div class="card-body"><h6 class="mb-4 text-secondary">Distribuição por Setor</h6><canvas id="chartSetores" style="max-height: 250px;"></canvas></div></div></div>
+                    <div class="col-md-6"><div class="card shadow-sm border-0 h-100">
+                        <div class="card-body p-0">
+                            <h6 class="p-3 mb-0 text-secondary border-bottom">Máquinas Alocadas</h6>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th class="ps-4">Setor</th><th class="text-end pe-4">Qtd. Máquinas</th></tr></thead><tbody id="resumoSetorTable"></tbody></table>
+                            </div>
+                        </div>
+                    </div></div>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <h6>Ativos</h6>
-                    <h3 id="totalAtivos" class="text-success">0</h3>
+            </section>
+
+            <section id="painel-colaboradores" class="dashboard-panel d-none" data-panel="colaboradores">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0 text-secondary border-start border-4 border-primary ps-3">Gestão de Colaboradores</h5>
+                    <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm rounded-pill" onclick="abrirModalColab()">+ Novo Colaborador</button>
                 </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <h6>Inativos</h6>
-                    <h3 id="totalInativos" class="text-secondary">0</h3>
+                <div class="d-flex gap-2 mb-3 bg-white p-2 rounded shadow-sm d-inline-flex border">
+                    <select id="filtroSetorColab" class="form-select form-select-sm border-0 bg-light" style="width: 200px;"><option value="">Todos os setores</option></select>
+                    <select id="filtroStatusColab" class="form-select form-select-sm border-0 bg-light" style="width: 150px;"><option value="">Todos os status</option><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option></select>
                 </div>
-            </div>
-        </div>
-    </div>
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <h5 class="mb-3">Resumo por setor</h5>
-            <div class="table-responsive">
-                <table class="table table-sm table-hover">
-                    <thead><tr><th>Setor</th><th>Colaboradores</th><th>Máquinas</th><th>Ativos</th><th>Inativos</th></tr></thead>
-                    <tbody id="resumoSetorTable"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h5 class="mb-3">Últimos ativos cadastrados</h5>
-            <table class="table table-hover">
-                <thead><tr><th>Nome</th><th>Tipo</th><th>Status</th></tr></thead>
-                <tbody id="ativosTable"></tbody>
-            </table>
-        </div>
-    </div>
-</section>
+                <div class="card shadow-sm border-0"><div class="card-body p-0"><div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary"><tr><th class="ps-4">Nome / Função</th><th>Contato / Doc</th><th>Setor</th><th>Status</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <tbody id="colaboradoresTable"></tbody>
+                    </table>
+                </div></div></div>
+            </section>
 
-<!-- Painel: Colaboradores (CRUD + filtros Setor / Status) -->
-<section id="painel-colaboradores" class="dashboard-panel d-none" data-panel="colaboradores">
-    <h5 class="mb-4">Colaboradores</h5>
-    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-        <select id="filtroSetorColab" class="form-select form-select-sm" style="width: auto;"><option value="">Todos os setores</option></select>
-        <select id="filtroStatusColab" class="form-select form-select-sm" style="width: auto;"><option value="">Todos</option><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option></select>
-        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalColab()">Novo colaborador</button>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
-                    <tr><th>Nome</th><th>Função</th><th>Telefone</th><th>CPF</th><th>Data nasc.</th><th>Setor</th><th>Status</th><th>Ações</th></tr>
-                </thead>
-                <tbody id="colaboradoresTable"></tbody>
-            </table>
-            <p id="colabEmpty" class="text-muted small mb-0 d-none">Nenhum colaborador cadastrado.</p>
-        </div>
-    </div>
-</section>
-
-<!-- Painel: Máquinas (CRUD + filtros Setor / Status) -->
-<section id="painel-maquinas" class="dashboard-panel d-none" data-panel="maquinas">
-    <h5 class="mb-4">Máquinas</h5>
-    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-        <select id="filtroSetorMaq" class="form-select form-select-sm" style="width: auto;"><option value="">Todos os setores</option></select>
-        <select id="filtroStatusMaq" class="form-select form-select-sm" style="width: auto;"><option value="">Todos</option><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option></select>
-        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalAsset('maquinas')">Nova máquina</button>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead><tr><th>Nome</th><th>Tipo</th><th>Patrimônio</th><th>Nº Série</th><th>Setor</th><th>Status</th><th>Ações</th></tr></thead>
-                <tbody id="maquinasTable"></tbody>
-            </table>
-            <p id="maquinasEmpty" class="text-muted small mb-0 d-none">Nenhuma máquina cadastrada.</p>
-        </div>
-    </div>
-</section>
-
-<!-- Painel: Inventário (CRUD + filtro Status) -->
-<section id="painel-inventario" class="dashboard-panel d-none" data-panel="inventario">
-    <h5 class="mb-4">Inventário de ativos</h5>
-    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-        <select id="filtroStatusInv" class="form-select form-select-sm" style="width: auto;"><option value="">Todos</option><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option></select>
-        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalAsset('inventario')">Novo ativo</button>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead><tr><th>Nome</th><th>Tipo</th><th>Patrimônio</th><th>Nº Série</th><th>Setor</th><th>Status</th><th>Ações</th></tr></thead>
-                <tbody id="inventarioTable"></tbody>
-            </table>
-            <p id="inventarioEmpty" class="text-muted small mb-0 d-none">Nenhum ativo no inventário.</p>
-        </div>
-    </div>
-</section>
-
-<!-- Painel: Softwares (CRUD + filtro Status) -->
-<section id="painel-softwares" class="dashboard-panel d-none" data-panel="softwares">
-    <h5 class="mb-4">Softwares</h5>
-    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-        <select id="filtroStatusSoft" class="form-select form-select-sm" style="width: auto;"><option value="">Todos</option><option value="Ativo">Ativos</option><option value="Inativo">Inativos</option></select>
-        <button type="button" class="btn btn-primary btn-sm" onclick="abrirModalAsset('softwares')">Novo software</button>
-    </div>
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead><tr><th>Nome</th><th>Patrimônio</th><th>Nº Série</th><th>Status</th><th>Ações</th></tr></thead>
-                <tbody id="softwaresTable"></tbody>
-            </table>
-            <p id="softwaresEmpty" class="text-muted small mb-0 d-none">Nenhum software cadastrado.</p>
-        </div>
-    </div>
-</section>
-
-<!-- Painel: Relatórios (sem chamados) -->
-<section id="painel-relatorios" class="dashboard-panel d-none" data-panel="relatorios">
-    <h5 class="mb-4">Relatórios</h5>
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card dashboard-card h-100">
-                <div class="card-body">
-                    <h6 class="text-muted">Ativos por status</h6>
-                    <p class="small mb-0">Resumo de ativos ativos e inativos por setor.</p>
+            <section id="painel-maquinas" class="dashboard-panel d-none" data-panel="maquinas">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0 text-secondary border-start border-4 border-primary ps-3">Máquinas Físicas (Alocadas)</h5>
+                    <button type="button" class="btn btn-primary btn-sm px-3 shadow-sm rounded-pill" onclick="abrirModalAsset('maquinas')">+ Nova Máquina</button>
                 </div>
+                <div class="d-flex gap-2 mb-3 bg-white p-2 rounded shadow-sm d-inline-flex border">
+                    <select id="filtroSetorMaq" class="form-select form-select-sm border-0 bg-light" style="width: 200px;"><option value="">Todos os setores</option></select>
+                </div>
+                <div class="card shadow-sm border-0"><div class="card-body p-0"><div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary"><tr><th class="ps-4">Equipamento / Tipo</th><th>Responsável</th><th>Identificação</th><th>Setor</th><th>Status</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <tbody id="maquinasTable"></tbody>
+                    </table>
+                </div></div></div>
+            </section>
+
+            <section id="painel-inventario" class="dashboard-panel d-none" data-panel="inventario">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0 text-secondary border-start border-4 border-warning ps-3">Estoque e Equipamentos Inativos</h5>
+                    <button type="button" class="btn btn-warning text-dark btn-sm px-3 shadow-sm rounded-pill fw-semibold" onclick="abrirModalAsset('inventario')">+ Novo Ativo (Estoque)</button>
+                </div>
+                <div class="card shadow-sm border-0"><div class="card-body p-0"><div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary"><tr><th class="ps-4">Equipamento / Tipo</th><th>Responsável Anterior</th><th>Identificação</th><th>Setor Original</th><th>Status</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <tbody id="inventarioTable"></tbody>
+                    </table>
+                </div></div></div>
+            </section>
+
+            <section id="painel-softwares" class="dashboard-panel d-none" data-panel="softwares">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0 text-secondary border-start border-4 border-info ps-3">Gestão de Licenças e Softwares</h5>
+                    <button type="button" class="btn btn-info text-white btn-sm px-3 shadow-sm rounded-pill fw-semibold" onclick="abrirModalAsset('softwares')">+ Novo Software</button>
+                </div>
+                <div class="card shadow-sm border-0"><div class="card-body p-0"><div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary"><tr><th class="ps-4">Software / Fabricante</th><th>Chave de Licença</th><th>Validade</th><th>Status</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <tbody id="softwaresTable"></tbody>
+                    </table>
+                </div></div></div>
+            </section>
+
+            <section id="painel-setores" class="dashboard-panel d-none" data-panel="setores">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0 text-secondary border-start border-4 border-secondary ps-3">Gerenciamento de Setores</h5>
+                    <button type="button" class="btn btn-secondary btn-sm px-3 shadow-sm rounded-pill" onclick="abrirModalSetor()">+ Novo Setor</button>
+                </div>
+                <div class="card shadow-sm border-0" style="max-width: 600px;"><div class="card-body p-0"><div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary"><tr><th class="ps-4">ID</th><th>Nome do Setor</th><th class="text-end pe-4">Ações</th></tr></thead>
+                        <tbody id="setoresAdminTable"></tbody>
+                    </table>
+                </div></div></div>
+            </section>
+
+            <section id="painel-relatorios" class="dashboard-panel d-none" data-panel="relatorios">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0 text-secondary border-start border-4 border-success ps-3">Relatórios e Exportação</h5>
+                    <button class="btn btn-success btn-sm px-4 shadow-sm rounded-pill fw-semibold" onclick="baixarRelatorioCSV()">⬇ Baixar Planilha CSV</button>
+                </div>
+                <div class="alert alert-light border shadow-sm d-flex align-items-center mb-4">
+                    <div class="me-3 fs-3">📊</div><div><strong>Pré-visualização:</strong> Amostra rápida do banco de dados. A exportação traz todos os detalhes para o Excel.</div>
+                </div>
+                <div class="card shadow-sm border-0"><div class="card-body p-0"><div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-sm table-hover table-striped align-middle mb-0" style="font-size: 0.9rem;">
+                        <thead class="table-dark sticky-top"><tr><th class="ps-4 py-2">ID</th><th>Ativo</th><th>Categoria</th><th>Setor / Localização</th><th>Status</th></tr></thead>
+                        <tbody id="tabelaPreviewRelatorio"></tbody>
+                    </table>
+                </div></div></div>
+            </section>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalColab" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light border-bottom-0"><h5 class="modal-title fw-bold" id="modalColabTitulo">Novo colaborador</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body px-4">
+                    <input type="hidden" id="colabId">
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Nome Completo *</label><input type="text" id="colabNome" class="form-control" required></div>
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Cargo / Função</label><input type="text" id="colabFuncao" class="form-control"></div>
+                    <div class="row">
+                        <div class="col-6 mb-3"><label class="form-label text-muted small fw-semibold">Telefone</label><input type="text" id="colabTelefone" class="form-control"></div>
+                        <div class="col-6 mb-3"><label class="form-label text-muted small fw-semibold">CPF</label><input type="text" id="colabCpf" class="form-control"></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Data de Nascimento</label><input type="date" id="colabDataNasc" class="form-control"></div>
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Setor Alocado</label><select id="colabSetor" class="form-select"></select></div>
+                    <div class="mb-2"><label class="form-label text-muted small fw-semibold">Status Operacional</label><select id="colabStatus" class="form-select"><option value="Ativo">🟢 Ativo</option><option value="Inativo">🔴 Inativo</option></select></div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light"><button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary px-4 rounded-pill shadow-sm" onclick="salvarColab()">Salvar Cadastro</button></div>
             </div>
         </div>
     </div>
-</section>
 
-</div>
-</div>
-
-<!-- Modal Colaborador -->
-<div class="modal fade" id="modalColab" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalColabTitulo">Novo colaborador</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <input type="hidden" id="colabId">
-                <div class="mb-2"><label class="form-label">Nome do colaborador *</label><input type="text" id="colabNome" class="form-control" placeholder="Nome completo"></div>
-                <div class="mb-2"><label class="form-label">Função *</label><input type="text" id="colabFuncao" class="form-control" placeholder="Cargo/função"></div>
-                <div class="mb-2"><label class="form-label">Telefone</label><input type="text" id="colabTelefone" class="form-control" placeholder="(00) 00000-0000"></div>
-                <div class="mb-2"><label class="form-label">CPF *</label><input type="text" id="colabCpf" class="form-control" placeholder="000.000.000-00" maxlength="14"></div>
-                <div class="mb-2"><label class="form-label">Data de nascimento</label><input type="date" id="colabDataNasc" class="form-control"></div>
-                <div class="mb-2"><label class="form-label">Setor *</label><input type="text" id="colabSetor" class="form-control" placeholder="Setor"></div>
-                <div class="mb-2"><label class="form-label">Status</label><select id="colabStatus" class="form-select"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div>
-                <p id="colabMsg" class="text-danger small mb-0"></p>
+    <div class="modal fade" id="modalAsset" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light border-bottom-0"><h5 class="modal-title fw-bold" id="modalAssetTitulo">Novo ativo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body px-4">
+                    <input type="hidden" id="assetId">
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Nome do Equipamento / Software *</label><input type="text" id="assetNome" class="form-control" placeholder="Ex: Latitude 3540" required></div>
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Categoria *</label>
+                        <select id="assetTipo" class="form-select" onchange="toggleAssetFields()">
+                            <option value="Desktop">Desktop</option><option value="Notebook">Notebook</option><option value="Servidor">Servidor</option><option value="Software">Software</option><option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div id="hardwareFields" class="row bg-light p-2 rounded mx-0 border mb-3">
+                        <div class="col-6 mb-2"><label class="form-label text-muted small fw-semibold">Nº Patrimônio</label><input type="text" id="assetPatrimonio" class="form-control form-control-sm"></div>
+                        <div class="col-6 mb-2"><label class="form-label text-muted small fw-semibold">Serial Number (SN)</label><input type="text" id="assetNumeroSerie" class="form-control form-control-sm"></div>
+                    </div>
+                    <div id="softwareFields" class="d-none bg-light p-2 rounded border mb-3">
+                        <div class="row">
+                            <div class="col-6 mb-2"><label class="form-label text-muted small fw-semibold">Fabricante</label><input type="text" id="assetFabricante" class="form-control form-control-sm"></div>
+                            <div class="col-6 mb-2"><label class="form-label text-muted small fw-semibold">Versão</label><input type="text" id="assetVersao" class="form-control form-control-sm"></div>
+                        </div>
+                        <div class="mb-2"><label class="form-label text-muted small fw-semibold">Chave de Licença</label><input type="text" id="assetChave" class="form-control form-control-sm text-monospace"></div>
+                        <div class="mb-1"><label class="form-label text-muted small fw-semibold">Expiração da Licença</label><input type="date" id="assetExpiracao" class="form-control form-control-sm"></div>
+                    </div>
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Responsável (Colaborador)</label><select id="assetColaborador" class="form-select"></select></div>
+                    <div class="mb-3"><label class="form-label text-muted small fw-semibold">Setor / Localização Física</label><select id="assetSetor" class="form-select"></select></div>
+                    <div class="mb-2"><label class="form-label text-muted small fw-semibold">Status do Ativo</label>
+                        <select id="assetStatus" class="form-select">
+                            <option value="Ativo">🟢 Em Uso (Ativo)</option><option value="Estoque">🟡 No Estoque / TI</option><option value="Inativo">🔴 Baixado (Inativo)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light"><button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary px-4 rounded-pill shadow-sm" onclick="salvarAsset()">Salvar Alterações</button></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" onclick="salvarColab()">Salvar</button></div>
         </div>
     </div>
-</div>
 
-<!-- Modal Ativo (Máquina / Inventário / Software) -->
-<div class="modal fade" id="modalAsset" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header"><h5 class="modal-title" id="modalAssetTitulo">Novo ativo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body">
-                <input type="hidden" id="assetId">
-                <div class="mb-2"><label class="form-label">Nome *</label><input type="text" id="assetNome" class="form-control"></div>
-                <div class="mb-2" id="wrapAssetTipo"><label class="form-label">Tipo *</label><select id="assetTipo" class="form-select"><option value="Desktop">Desktop</option><option value="Notebook">Notebook</option><option value="Servidor">Servidor</option><option value="Software">Software</option><option value="Outro">Outro</option></select></div>
-                <div class="mb-2"><label class="form-label">Patrimônio</label><input type="text" id="assetPatrimonio" class="form-control" placeholder="Número do patrimônio"></div>
-                <div class="mb-2"><label class="form-label">Número de série</label><input type="text" id="assetNumeroSerie" class="form-control" placeholder="Número de série"></div>
-                <div class="mb-2" id="wrapAssetSetor"><label class="form-label">Setor</label><input type="text" id="assetSetor" class="form-control" placeholder="Setor"></div>
-                <div class="mb-2"><label class="form-label">Status</label><select id="assetStatus" class="form-select"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div>
-                <p id="assetMsg" class="text-danger small mb-0"></p>
+    <div class="modal fade" id="modalSetor" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-light border-bottom-0"><h5 class="modal-title fw-bold" id="modalSetorTitulo">Novo Setor</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body px-4">
+                    <input type="hidden" id="setorId">
+                    <div class="mb-2"><label class="form-label text-muted small fw-semibold">Nome do Setor *</label><input type="text" id="setorNome" class="form-control" placeholder="Ex: Financeiro" required></div>
+                </div>
+                <div class="modal-footer border-top-0 bg-light"><button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary rounded-pill shadow-sm" onclick="salvarSetor()">Salvar</button></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" onclick="salvarAsset()">Salvar</button></div>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/dashboard.js" type="module"></script>
 </body>
 </html>

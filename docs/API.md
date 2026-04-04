@@ -1,166 +1,111 @@
+---
+
 # API REST — SysManage TI
 
 Base URL (desenvolvimento): `http://localhost:3000`
 
-Respostas de erro usam JSON com campo `error` (string). Sucesso costuma retornar objeto com dados ou `message`.
+Respostas de erro utilizam JSON com o campo `error` (string). Requisições bem-sucedidas retornam objetos com dados ou mensagens de confirmação.
 
 ---
 
 ## Autenticação
 
-### POST `/api/register`
-
-Cria um novo usuário (cadastro).
-
-**Body (JSON):**
-
-| Campo    | Tipo   | Obrigatório | Descrição        |
-|----------|--------|-------------|-------------------|
-| name     | string | sim         | Nome do usuário   |
-| email    | string | sim         | E-mail (único)    |
-| password | string | sim         | Mínimo 6 caracteres |
-
-**Resposta 200:** `{ "message": "Conta criada com sucesso" }`  
-**Erros:** 400 (validação), 500 (erro interno)
-
----
-
 ### POST `/api/login`
-
-Autentica e retorna o token JWT.
+Autentica o usuário e define um **Cookie HTTP-Only** contendo o token JWT.
 
 **Body (JSON):**
-
-| Campo    | Tipo   | Obrigatório |
-|----------|--------|-------------|
-| email    | string | sim         |
-| password | string | sim         |
+* `email`: string (obrigatório)
+* `password`: string (obrigatório)
 
 **Resposta 200:**
-
 ```json
 {
-  "token": "eyJhbGc...",
   "mustChangePassword": false,
   "user": {
     "id": 1,
-    "name": "Nome",
-    "email": "email@exemplo.com"
+    "name": "Nome do Usuário",
+    "role": "admin"
   }
 }
 ```
+*Roles disponíveis: `admin`, `tecnico`, `leitura`.*
 
-Se o usuário precisar trocar a senha no primeiro login, `mustChangePassword` vem `true`.  
-**Erros:** 401 (credenciais inválidas), 500
+### POST `/api/logout`
+Encerra a sessão removendo o cookie de autenticação do navegador.
 
 ---
 
-### PUT `/api/auth/change-password` 🔒
+## Setores
 
-Altera a senha do usuário logado. Requer header `Authorization: Bearer <token>`.
+### GET `/api/setores` 🔒
+Retorna a lista de todos os setores cadastrados na tabela independente.
+**Resposta 200:** Array de objetos `[{ "id": 1, "nome": "TI" }]`.
 
-**Body (JSON):**
+### POST `/api/setores` 🔒
+Cria um novo setor. Nome deve ser único e não vazio.
 
-| Campo          | Tipo   | Obrigatório | Descrição |
-|----------------|--------|-------------|-----------|
-| currentPassword | string | condicional | Obrigatório exceto no primeiro login (must_change_password) |
-| newPassword   | string | sim         | Mínimo 6 caracteres |
+### PUT `/api/setores/:id` 🔒
+Atualiza o nome de um setor existente.
 
-**Resposta 200:** `{ "message": "Senha alterada com sucesso" }`  
-**Erros:** 400 (validação), 401 (token ou senha atual inválida), 404, 500
+### DELETE `/api/setores/:id` 🔒
+Remove um setor do sistema.
 
 ---
 
 ## Colaboradores
 
-### GET `/api/colaboradores`
+### GET `/api/colaboradores` 🔒
+Lista colaboradores. Suporta filtros via Query Params: `setor`, `status`.
 
-Lista colaboradores. Query params opcionais: `setor`, `status` (Ativo/Inativo).
+### POST `/api/colaboradores` 🔒
+Cria um colaborador.
+**Campos:** `nome`, `funcao`, `cpf` (único), `telefone`, `data_nascimento` (pode ser null), `setor`, `status`.
 
-**Resposta 200:** array de objetos (id, nome, funcao, telefone, cpf, data_nascimento, setor, status, etc.)
-
----
-
-### POST `/api/colaboradores`
-
-Cria colaborador. Body: nome, funcao, telefone, cpf, data_nascimento, setor, status (Ativo/Inativo). CPF obrigatório e único.
+### DELETE `/api/colaboradores/:id` 🔒
+Remove um colaborador. Requer privilégios de `admin`.
 
 ---
 
-### GET `/api/colaboradores/:id`
+## Ativos (Máquinas e Softwares)
 
-Retorna um colaborador por ID. **Resposta 404** se não existir.
+### GET `/api/assets` 🔒
+Lista ativos. Query param opcional: `type` (ex: `Software`).
+*Utilizado também para a geração de relatórios CSV.*
 
----
+### POST e PUT `/api/assets` 🔒
+Cria ou atualiza um ativo. O corpo da requisição aceita campos dinâmicos baseados no tipo:
 
-### PUT `/api/colaboradores/:id`
+**Campos Comuns:**
+* `nome`, `type`, `status`, `setor`.
 
-Atualiza colaborador. Mesmos campos do POST.
+**Campos específicos para Hardware:**
+* `patrimonio`, `numero_serie`.
 
----
+**Campos específicos para Software (Licenciamento):**
+* `fabricante`, `versao`, `chave_licenca`, `data_expiracao`.
 
-### DELETE `/api/colaboradores/:id`
-
-Remove colaborador. **Resposta 404** se não existir.
-
----
-
-## Ativos (máquinas / inventário / softwares)
-
-### GET `/api/assets`
-
-Lista ativos. Query params opcionais: `setor`, `status` (Ativo/Inativo), `tipo` (ex.: Desktop, Software).
-
-**Resposta 200:** array de objetos com `id`, `nome`, `tipo`, `status`, `setor`, `patrimonio`, `numero_serie` (quando as colunas existirem).
+### DELETE `/api/assets/:id` 🔒
+Remove um ativo permanentemente. Requer privilégios de `admin`.
 
 ---
 
-### POST `/api/assets`
+## Dashboard
 
-Cria ativo. Body: `name`, `type`, `status` (Ativo/Inativo), `setor`, `patrimonio`, `numero_serie` (opcionais).
-
----
-
-### GET `/api/assets/:id`
-
-Retorna um ativo por ID.
+### GET `/api/dashboard/summary` 🔒
+Retorna métricas consolidadas para o painel principal e gráficos:
+* Totais de máquinas e softwares.
+* Contagem de ativos por status (Ativo/Inativo/Estoque).
+* Distribuição de máquinas por setor (usado no `Chart.js`).
 
 ---
 
-### PUT `/api/assets/:id`
+## Segurança e Permissões
 
-Atualiza ativo. Mesmos campos do POST.
+As rotas marcadas com 🔒 exigem que a requisição inclua o cookie de sessão válido. A API valida o nível de acesso (`role`) do usuário para permitir ou bloquear certas operações:
 
----
-
-### DELETE `/api/assets/:id`
-
-Remove ativo.
+* **Admin**: Acesso total (Leitura, Escrita, Exclusão).
+* **Tecnico**: Permissão para criar e editar ativos/colaboradores, mas não pode excluir.
+* **Leitura**: Apenas visualização de dados.
 
 ---
 
-## Dashboard e setores
-
-### GET `/api/dashboard/summary`
-
-Retorna resumo para o dashboard: totais (máquinas, softwares, ativos, inativos), resumo por setor (colaboradores, máquinas, ativos/inativos), últimos ativos. Não exige autenticação na implementação atual; pode ser protegido no futuro.
-
-**Resposta 200:** objeto com `totalMachines`, `totalSoftwares`, `ativos`, `inativos`, `porSetor` (array), `latestAssets` (array).
-
----
-
-### GET `/api/setores`
-
-Retorna lista de setores distintos (a partir dos colaboradores). **Resposta 200:** array de strings.
-
----
-
-## Uso do token
-
-Para rotas que exigem autenticação (ex.: `PUT /api/auth/change-password`), envie no header:
-
-```
-Authorization: Bearer <token>
-```
-
-Token obtido em `POST /api/login`. Se expirado ou inválido, a API retorna 401.

@@ -1,74 +1,66 @@
+Aqui está o seu guia de **DESENVOLVIMENTO.md** atualizado para refletir as melhorias de segurança, o novo sistema de permissões e as tecnologias visuais implementadas no SysManage TI.
+
+---
+
 # Guia de desenvolvimento
 
 Padrões e dicas para quem for alterar ou estender o SysManage TI.
 
 ## Estrutura do backend
 
-- **`server.js`**: ponto de entrada; configura Express, pool MySQL, middlewares e todas as rotas.  
-- Rotas estão no próprio `server.js` (não há pasta `routes/` separada por enquanto).  
-- **`sql/`**: scripts de criação/alteracao de tabelas; executados manualmente no MySQL.
+- **`server.js`**: Ponto de entrada único. Configura o Express, pool de conexões MySQL, middlewares (CORS, JSON, Cookies) e todas as rotas da API.
+- **Arquitetura de Rotas**: As rotas estão concentradas no `server.js`. Para evoluções futuras, recomenda-se a migração para uma pasta `routes/` visando melhor organização.
+- **Persistência (`sql/`)**: Scripts SQL para criação e alteração de tabelas. Devem ser executados manualmente no MySQL para refletir as mudanças de esquema.
 
-Para evoluir sem bagunçar:
+### Evolução Segura
+- **Validação**: Mantenha a validação rigorosa de entrada (campos obrigatórios, tipos e tratamento de strings vazias para `null` em campos de data).
+- **Respostas**: Erros devem retornar status HTTP adequado e um JSON com o campo `error` descritivo.
+- **Segurança**: Rotas sensíveis devem obrigatoriamente usar o `authMiddleware`.
 
-- Manter validação de entrada (campos obrigatórios, tamanhos, tipos).  
-- Respostas de erro em JSON com campo `error`.  
-- Rotas sensíveis (alterar senha, etc.) protegidas com o middleware de JWT.
+## Autenticação e Permissões (RBAC)
 
-## Autenticação
+O sistema utiliza **Role-Based Access Control (RBAC)** para gerenciar o que cada usuário pode fazer.
 
-- Login retorna JWT com `id` e `email`; expiração definida no `jwt.sign` (ex.: 8h).  
-- Rotas protegidas usam `authMiddleware` e leem `req.user.id` (e `req.user.email` se precisar).  
-- Frontend envia `Authorization: Bearer <token>` em todas as chamadas que exigem login.
-
-Ao adicionar novas rotas “só para logados”, use:
-
-```js
-app.get('/api/minha-rota', authMiddleware, async (req, res) => {
-  const userId = req.user.id;
-  // ...
-});
-```
+- **Níveis de Acesso (Roles)**:
+    - `admin`: Acesso total (visualização, edição e exclusão).
+    - `tecnico`: Pode visualizar, criar e editar ativos/colaboradores, mas **não possui permissão de exclusão**.
+    - `leitura`: Apenas visualização dos dados e dashboards.
+- **Armazenamento do Token**: O JWT não é mais enviado no corpo do JSON. Ele é armazenado em um **Cookie HTTP-Only**, mitigando ataques de roubo de sessão via scripts (XSS).
+- **Identificação no Frontend**: O objeto `user` no `localStorage` contém o nome e a `role`, utilizados apenas para controle visual (esconder/exibir botões).
 
 ## Banco de dados
 
-- Sempre usar parâmetros preparados (`?` e array de valores) para evitar SQL injection.  
-- Colunas opcionais (ex.: `must_change_password`, `setor` em assets): o código verifica com `SHOW COLUMNS` e monta o SQL dinamicamente para não quebrar em bancos antigos.  
-- Novas colunas: criar script em `sql/` e documentar em `docs/AMBIENTE.md`.
+- **Parâmetros Preparados**: Utilize sempre `?` em consultas SQL para evitar ataques de SQL Injection.
+- **Tratamento de Datas**: O backend converte automaticamente strings de data vazias vindas do frontend em `null` para evitar erros de integridade no MySQL.
+- **Gestão de Setores**: Utilize a tabela independente `setores` para garantir a padronização das localizações em todo o sistema.
 
 ## Frontend
 
-- Páginas em `sysmanage-ti/frontend/public/` (HTML, CSS, JS).  
-- O backend serve essa pasta em `/`; não há build (ex.: Webpack) nem SPA com roteador.  
-- Token e usuário em `localStorage`; redirecionamento para `login.html` quando não há token ou quando a API retorna 401.  
-- Ao adicionar novas telas, seguir o padrão de `fetch` com header `Authorization: Bearer ${token}` e tratamento de 401 (limpar storage e redirecionar para login).
+- **Tecnologias**: HTML5, CSS3, Bootstrap 5.3 e Vanilla JS.
+- **Gráficos**: Integração com **Chart.js** no dashboard principal para exibição da distribuição de ativos por setor.
+- **Comunicação com API**: As chamadas `fetch` devem incluir a propriedade `{ credentials: "include" }` para que o navegador envie o cookie de autenticação automaticamente.
+- **Relatórios**: Implementação de exportação de dados em tempo real para formato **CSV** no painel de Relatórios.
 
 ## Boas práticas
 
-- **Nunca** commitar `.env` ou arquivos com senhas/chaves.  
-- Manter documentação atualizada (README, `docs/API.md`, `docs/AMBIENTE.md`) quando criar rotas ou variáveis novas.  
-- Mensagens de erro da API em português e objetivas para o frontend exibir.  
-- Logs de erro no backend com `console.error` (evitar logar corpo de requisição com senha).
+- **Variáveis Sensíveis**: Jamais comite o arquivo `.env`. Utilize o `.env.example` como referência.
+- **Logs**: Utilize `console.error` para capturar falhas no backend, mas evite logar dados sensíveis como senhas ou tokens completos.
+- **UX**: Garanta que as mensagens de erro retornadas pela API sejam amigáveis e em português.
 
 ## Rodando em desenvolvimento
 
 ```bash
-# Backend (com recarregamento)
+# Navegue até a pasta do backend
 cd sysmanage-ti/backend
+
+# Inicie com recarregamento automático (requer nodemon)
 npm run dev
 ```
 
-Se não houver script `dev`, use `node server.js` ou configure `nodemon` no `package.json`.  
-Frontend é só abrir o navegador em `http://localhost:3000` após o backend estar no ar.
-
-## Testes manuais da API
-
-- **Postman / Insomnia:** importar a base URL `http://localhost:3000`, criar request de login (POST `/api/login`), copiar o `token` da resposta e usar em rotas protegidas no header `Authorization: Bearer <token>`.  
-- **curl:**  
-  Login: `curl -X POST http://localhost:3000/api/login -H "Content-Type: application/json" -d "{\"email\":\"...\",\"password\":\"...\"}"`  
-  Rota protegida: `curl -X PUT http://localhost:3000/api/auth/change-password -H "Content-Type: application/json" -H "Authorization: Bearer SEU_TOKEN" -d "{\"currentPassword\":\"...\",\"newPassword\":\"...\"}"`
+O frontend é servido estaticamente pelo backend na porta definida (padrão `http://localhost:3000`).
 
 ## Dúvidas ou melhorias
 
-- Arquitetura: `docs/ARQUITETURA.md`  
-- Endpoints: `docs/API.md`  
-- Ambiente e banco: `docs/AMBIENTE.md`
+- **Arquitetura detalhada**: `docs/ARQUITETURA.md`
+- **Documentação da API**: `docs/API.md`
+- **Configuração de Ambiente**: `docs/AMBIENTE.md`

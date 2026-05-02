@@ -4,11 +4,14 @@ Sistema robusto de gestão de inventário de ativos de TI e colaboradores. Permi
 
 ## 🚀 Novidades desta Versão
 
-  - **Controle de Acesso (RBAC):** Níveis de permissão para Admin, Técnico e Leitura.
+  - **Controle de Acesso (RBAC):** Níveis de permissão rigorosamente implementados (Admin, Técnico, Leitura).
   - **Gestão de Software:** Campos específicos para conformidade (Fabricante, Versão, Chave de Licença e Expiração).
   - **Dashboard Visual:** Gráficos interativos integrados com Chart.js.
   - **Relatórios:** Exportação de todo o inventário para formato CSV (compatível com Excel).
-  - **Segurança:** Autenticação via JWT armazenado em Cookies HTTP-Only.
+  - **Segurança Reforçada:** 
+    - Autenticação via JWT em Cookies HTTP-Only (`sameSite: strict`).
+    - Filtro Anti-XSS Global (`sanitize-html`).
+    - Proteção contra Força-Bruta (Rate Limiting) e cabeçalhos seguros via Helmet.
 
 ## 🛠️ Tecnologias
 

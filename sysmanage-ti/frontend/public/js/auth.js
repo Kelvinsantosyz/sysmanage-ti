@@ -34,6 +34,7 @@ async function login() {
   
       // REDIRECIONAMENTO
       if (data.mustChangePassword) {
+        localStorage.setItem("mustChangePassword", "1");
         window.location.href = "/change-password.html";
       } else {
         window.location.href = "/dashboard.html";

@@ -1,120 +1,109 @@
-(function () {
+(async function () {
 
-  const params = new URLSearchParams(window.location.search);
-
-  const isFirstLogin =
-    params.get("first") === "1" ||
-    localStorage.getItem("mustChangePassword") === "1";
-
-  const wrapCurrent = document.getElementById("wrapCurrentPassword");
-  const wrapVoltar = document.getElementById("wrapVoltar");
-  const subtitle = document.getElementById("subtitle");
-
-  if (isFirstLogin) {
-
-    if (wrapCurrent) wrapCurrent.classList.add("d-none");
-    if (wrapVoltar) wrapVoltar.classList.add("d-none");
-
-    if (subtitle) {
-      subtitle.textContent =
-        "Por segurança, altere sua senha no primeiro acesso.";
+  // ── 1. Verificar sessão ──────────────────────────────────────────────────
+  let sessionUser = null;
+  try {
+    const res = await fetch("/api/auth/me", { credentials: "include" });
+    if (res.status === 401) {
+      window.location.href = "login.html";
+      return;
     }
-
-  } else {
-
-    if (wrapCurrent) wrapCurrent.classList.remove("d-none");
-    if (wrapVoltar) wrapVoltar.classList.remove("d-none");
-
+    sessionUser = await res.json();
+  } catch (e) {
+    window.location.href = "login.html";
+    return;
   }
 
-  const btnSalvar = document.getElementById("btnSalvar");
+  // ── 2. Decidir se é primeiro login ───────────────────────────────────────
+  const params = new URLSearchParams(window.location.search);
+  const isFirstLogin =
+    params.get("first") === "1" ||
+    localStorage.getItem("mustChangePassword") === "1" ||
+    sessionUser.must_change_password === 1;
 
-  btnSalvar.addEventListener("click", async function () {
+  const wrapCurrent = document.getElementById("wrapCurrentPassword");
+  const wrapVoltar  = document.getElementById("wrapVoltar");
+  const subtitle    = document.getElementById("subtitle");
 
-    const msgEl = document.getElementById("msg");
+  if (isFirstLogin) {
+    wrapCurrent.classList.add("hidden");
+    wrapVoltar.classList.add("hidden");
+    if (subtitle) subtitle.textContent = "Por segurança, altere sua senha no primeiro acesso.";
+  } else {
+    wrapCurrent.classList.remove("hidden");
+    wrapVoltar.classList.remove("hidden");
+  }
 
-    const current = document.getElementById("currentPassword").value;
-    const newPass = document.getElementById("newPassword").value;
+  // ── 3. Helpers de mensagem ───────────────────────────────────────────────
+  function showMsg(text, type) {
+    const el = document.getElementById("msg");
+    el.textContent = text;
+    el.className = type; // "error" ou "success"
+  }
+
+  function clearMsg() {
+    const el = document.getElementById("msg");
+    el.textContent = "";
+    el.className = "";
+  }
+
+  // ── 4. Envio do formulário ───────────────────────────────────────────────
+  document.getElementById("btnSalvar").addEventListener("click", async function () {
+    const btn         = this;
+    const current     = document.getElementById("currentPassword").value.trim();
+    const newPass     = document.getElementById("newPassword").value;
     const confirmPass = document.getElementById("confirmPassword").value;
 
-    msgEl.textContent = "";
+    clearMsg();
 
     if (newPass.length < 6) {
-      msgEl.textContent =
-        "A nova senha deve ter pelo menos 6 caracteres.";
-      return;
+      return showMsg("A nova senha deve ter pelo menos 6 caracteres.", "error");
     }
-
     if (newPass !== confirmPass) {
-      msgEl.textContent =
-        "A confirmação da senha não confere.";
-      return;
+      return showMsg("A confirmação da senha não confere.", "error");
     }
-
     if (!isFirstLogin && !current) {
-      msgEl.textContent =
-        "Informe a senha atual.";
-      return;
+      return showMsg("Informe a senha atual.", "error");
     }
 
-    const body = {
-      newPassword: newPass
-    };
+    const body = { newPassword: newPass };
+    if (!isFirstLogin) body.currentPassword = current;
 
-    if (!isFirstLogin) {
-      body.currentPassword = current;
-    }
+    btn.disabled = true;
+    btn.textContent = "Salvando...";
 
     try {
-
       const response = await fetch("/api/auth/change-password", {
-
         method: "PUT",
-
-        headers: {
-          "Content-Type": "application/json"
-        },
-
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
-
         body: JSON.stringify(body)
-
       });
 
       const data = await response.json();
 
       if (response.status === 401) {
-
         localStorage.clear();
-
         window.location.href = "login.html";
-
         return;
-
       }
 
       if (response.ok) {
-
         localStorage.removeItem("mustChangePassword");
-
-        alert(data.message || "Senha alterada com sucesso!");
-
-        window.location.href = "dashboard.html";
-
+        showMsg(data.message || "Senha alterada com sucesso!", "success");
+        setTimeout(function () {
+          window.location.href = "dashboard.html";
+        }, 1500);
       } else {
-
-        msgEl.textContent =
-          data.error || "Erro ao alterar senha.";
-
+        showMsg(data.error || "Erro ao alterar a senha.", "error");
+        btn.disabled = false;
+        btn.textContent = "Salvar Nova Senha";
       }
-
     } catch (err) {
-
-      msgEl.textContent =
-        "Erro ao conectar com o servidor.";
-
+      showMsg("Erro ao conectar com o servidor.", "error");
+      btn.disabled = false;
+      btn.textContent = "Salvar Nova Senha";
     }
-
   });
 
 })();

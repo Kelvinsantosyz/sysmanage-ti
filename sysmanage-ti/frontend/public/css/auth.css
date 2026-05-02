@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #f0f4f8;
+  --surface: #ffffff;
+  --border:  #e2e8f0;
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-glow: rgba(99,102,241,0.2);
+  --accent:  #8b5cf6;
+  --text:    #0f172a;
+  --text-muted: #64748b;
+  --text-soft:  #94a3b8;
+  --radius:  16px;
+  --radius-sm: 10px;
+  --transition: all 0.18s ease;
+}
+
+html, body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(ellipse 70% 50% at 20% 20%, rgba(99,102,241,0.07), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.05), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ============================
+   WRAPPER
+============================ */
+.auth-wrapper {
+  width: 100%;
+  max-width: 400px;
+  animation: slideUp 0.35s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================
+   LOGO
+============================ */
+.auth-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.auth-logo-icon {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.auth-logo-text {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ============================
+   CARD
+============================ */
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 30px;
+  box-shadow: 0 4px 24px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.06);
+}
+
+/* ============================
+   HEADER
+============================ */
+.auth-header {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.auth-header h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+
+.auth-header p {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* ============================
+   FORM
+============================ */
+.auth-form .form-group { margin-bottom: 16px; }
+
+.auth-form label {
+  display: block;
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  margin-bottom: 6px;
+}
+
+.auth-form input {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+  padding: 11px 13px;
+  transition: var(--transition);
+  outline: none;
+}
+
+.auth-form input:focus {
+  border-color: var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.auth-form input::placeholder { color: var(--text-soft); }
+
+/* ============================
+   BUTTON
+============================ */
+.btn-auth {
+  width: 100%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: var(--transition);
+  margin-top: 4px;
+}
+
+.btn-auth:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+.btn-auth:active { transform: translateY(0); }
+
+/* ============================
+   MESSAGE
+============================ */
+.auth-msg {
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 12px;
+  border-radius: 8px;
+  padding: 0;
+  color: transparent;
+  min-height: 18px;
+}
+
+.auth-msg.error {
+  color: #dc2626;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  padding: 8px 14px;
+}
+
+.auth-msg.success {
+  color: #059669;
+  background: #f0fdf4;
+  border: 1px solid #a7f3d0;
+  padding: 8px 14px;
+}
+
+/* ============================
+   DIVIDER
+============================ */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0;
+  color: var(--text-soft);
+  font-size: 0.775rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ============================
+   SECONDARY
+============================ */
+.auth-secondary { text-align: center; }
+
+.auth-secondary p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.btn-auth-secondary {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.btn-auth-secondary:hover {
+  background: #f8fafc;
+  border-color: var(--text-soft);
+  color: var(--text);
+}
+
+/* ============================
+   DARK THEME
+============================ */
+[data-theme="dark"] {
+  --bg:         #0f172a;
+  --surface:    #1e293b;
+  --border:     #334155;
+  --text:       #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-soft:  #64748b;
+}
+
+[data-theme="dark"] body {
+  background-image:
+    radial-gradient(ellipse 70% 50% at 20% 20%, rgba(99,102,241,0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(139,92,246,0.08), transparent);
+}
+
+[data-theme="dark"] .auth-card {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.3);
+}
+
+[data-theme="dark"] .auth-form input {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .auth-form input:focus {
+  background: #3d4f68;
+}
+
+[data-theme="dark"] .btn-auth-secondary {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .btn-auth-secondary:hover {
+  background: #334155;
+  color: var(--text);
+}
+
+[data-theme="dark"] #themeToggleAuth {
+  background: #1e293b;
+  color: #94a3b8;
+}

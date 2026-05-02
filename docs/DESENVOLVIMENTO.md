@@ -1,4 +1,4 @@
-Aqui está o seu guia de **DESENVOLVIMENTO.md** atualizado para refletir as melhorias de segurança, o novo sistema de permissões e as tecnologias visuais implementadas no SysManage TI.
+
 
 ---
 

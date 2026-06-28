@@ -24,16 +24,14 @@ Sistema robusto de gestão de inventário de ativos de TI e colaboradores. Permi
 
 ## 📋 Pré-requisitos
 
-* **Node.js** 18 ou superior.
-* **MySQL** 8.x ou superior.
+* Node.js 18 ou superior
+* MySQL 8.x ou superior
 
 ## ⚙️ Início Rápido
 
 ### 1. Configuração do Banco de Dados
 
 Crie o banco de dados e as tabelas executando os scripts contidos em `docs/AMBIENTE.md`.
-
-Exemplo de configuração inicial:
 
 ```sql
 CREATE DATABASE sysmanage_ti CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -47,22 +45,13 @@ FLUSH PRIVILEGES;
 
 ### 2. Configuração do Backend
 
-1. Navegue até a pasta do backend:
-
 ```bash
 cd sysmanage-ti/backend
-```
-
-2. Crie o arquivo `.env` com base no guia de ambiente.
-
-3. Instale as dependências e inicie o servidor:
-
-```bash
 npm install
 npm run dev
 ```
 
-O servidor estará disponível em:
+Servidor disponível em:
 
 ```bash
 http://localhost:3000
@@ -72,10 +61,10 @@ http://localhost:3000
 
 O frontend é servido automaticamente pelo backend.
 
-* **Página Inicial / Login:**
+* Página Inicial / Login:
   `http://localhost:3000`
 
-* **Registro de Usuário:**
+* Registro de Usuário:
   `http://localhost:3000/register.html`
 
 ## 📂 Estrutura do Projeto
@@ -83,43 +72,123 @@ O frontend é servido automaticamente pelo backend.
 ```bash
 Projeto/
 ├── sysmanage-ti/
-│   ├── backend/                 # API Node.js (Express + MySQL)
-│   │   ├── server.js            # Entrada principal da API
-│   │   └── .env                 # Variáveis sensíveis (não versionado)
+│   ├── backend/
+│   │   ├── server.js
+│   │   └── .env
 │   │
-│   ├── frontend/                # Interface do usuário
+│   ├── frontend/
 │   │   └── public/
-│   │       ├── js/              # Scripts da aplicação
-│   │       │   └── dashboard.js
-│   │       ├── css/             # Arquivos de estilização
-│   │       └── assets/          # Recursos estáticos
+│   │       ├── js/
+│   │       ├── css/
+│   │       └── assets/
 │
-├── docs/                        # Documentação técnica
+├── docs/
+│   ├── ARQUITETURA.md
+│   ├── API.md
+│   ├── AMBIENTE.md
+│   └── DESENVOLVIMENTO.md
+│
+├── arquitetura_aws_sysmanage.png
+├── Estimate -AWS.pdf
 └── README.md
 ```
 
 ## 📖 Documentação Adicional
 
-| Documento                 | Conteúdo                                       |
-| ------------------------- | ---------------------------------------------- |
-| `docs/ARQUITETURA.md`     | Fluxo de autenticação e arquitetura do sistema |
-| `docs/API.md`             | Endpoints REST e níveis de permissão           |
-| `docs/AMBIENTE.md`        | Estrutura SQL e variáveis de ambiente          |
-| `docs/DESENVOLVIMENTO.md` | Boas práticas e padrões do projeto             |
+| Documento                       | Conteúdo                                       |
+| ------------------------------- | ---------------------------------------------- |
+| `docs/ARQUITETURA.md`           | Fluxo de autenticação e arquitetura do sistema |
+| `docs/API.md`                   | Endpoints REST e níveis de permissão           |
+| `docs/AMBIENTE.md`              | Estrutura SQL e variáveis de ambiente          |
+| `docs/DESENVOLVIMENTO.md`       | Boas práticas e padrões do projeto             |
+| `arquitetura_aws_sysmanage.png` | Arquitetura AWS proposta para o sistema        |
+| `Estimate -AWS.pdf`             | Estimativa de custos da infraestrutura AWS     |
+
+## ☁️ Arquitetura AWS
+
+O projeto inclui uma arquitetura em nuvem baseada na AWS, projetada para oferecer alta disponibilidade, escalabilidade, segurança e desempenho para ambientes corporativos.
+
+### Diagrama da Arquitetura
+
+<p align="center">
+  <img src="./arquitetura_aws_sysmanage.png" alt="Arquitetura AWS SysManage TI" width="900">
+</p>
+
+A imagem acima representa a arquitetura proposta para implantação do SysManage TI em ambiente AWS.
+
+### Componentes da Infraestrutura
+
+| Serviço AWS                     | Finalidade                                         |
+| ------------------------------- | -------------------------------------------------- |
+| Amazon EC2                      | Hospedagem da aplicação backend e frontend         |
+| Amazon RDS MySQL (Multi-AZ)     | Banco de dados relacional com alta disponibilidade |
+| Application Load Balancer (ALB) | Distribuição de carga e balanceamento de tráfego   |
+| Amazon CloudFront               | Entrega de conteúdo com baixa latência             |
+| AWS WAF                         | Proteção contra ataques e ameaças web              |
+| Amazon Route 53                 | Gerenciamento de DNS                               |
+| AWS Certificate Manager (ACM)   | Gerenciamento de certificados SSL/TLS              |
+| Amazon VPC                      | Isolamento e controle da rede                      |
+| AWS IAM                         | Controle de acesso e governança                    |
+| AWS IAM Access Analyzer         | Auditoria e validação de permissões                |
+
+### Fluxo da Aplicação
+
+1. O usuário acessa o sistema através do domínio configurado no Route 53.
+2. O tráfego HTTPS é protegido por certificados emitidos pelo AWS Certificate Manager.
+3. O AWS WAF filtra requisições maliciosas antes de chegarem à aplicação.
+4. O CloudFront acelera a entrega de conteúdo estático.
+5. O Application Load Balancer distribui as requisições entre as instâncias EC2.
+6. As instâncias EC2 executam a aplicação SysManage TI.
+7. Os dados são armazenados no Amazon RDS MySQL configurado em Multi-AZ para alta disponibilidade.
+
+### Benefícios
+
+* Escalabilidade sob demanda
+* Alta disponibilidade do banco de dados com RDS Multi-AZ
+* Balanceamento inteligente de carga
+* Proteção avançada contra ameaças web
+* Melhor desempenho global através do CloudFront
+* Comunicação segura via HTTPS
+* Governança e controle de acesso centralizados
+* Arquitetura preparada para crescimento futuro
+
+## 💰 Estimativa de Custos AWS
+
+A documentação do projeto inclui uma estimativa de custos para execução da infraestrutura em ambiente AWS.
+
+### Resumo Financeiro
+
+| Item                 | Valor        |
+| -------------------- | ------------ |
+| Custo Inicial        | USD 202,36   |
+| Custo Mensal         | USD 768,34   |
+| Custo Anual Estimado | USD 9.422,44 |
+
+> Valores calculados utilizando AWS Pricing Calculator e sujeitos a alterações conforme utilização, região AWS selecionada e volume de tráfego.
+
+### Arquivos Relacionados
+
+* `arquitetura_aws_sysmanage.png` — Diagrama da arquitetura AWS.
+* `Estimate -AWS.pdf` — Estimativa detalhada de custos da infraestrutura.
+
 
 ## 🎥 Demonstração do Projeto
 
-* **Apresentação em PowerPoint:**
-  [YouTube - Apresentação do Projeto](https://www.youtube.com/watch?v=_BDGUJN5ghY&utm_source=chatgpt.com)
+### Apresentação
 
-* **Demonstração do Sistema:**
-  [YouTube - Demonstração do Software](https://www.youtube.com/watch?v=qw5XLDT1ch8&utm_source=chatgpt.com)
+https://www.youtube.com/watch?v=_BDGUJN5ghY
 
-* **Documentação Completa (.docx):**
-  [SysManage TI - Documento Técnico](https://github.com/Kelvinsantosyz/sysmanage-ti/blob/main/docs/SYSMANAGE-TI.docx?utm_source=chatgpt.com)
+### Demonstração do Sistema
 
-* **Repositório Oficial:**
-  [GitHub - SysManage TI](https://github.com/Kelvinsantosyz/sysmanage-ti?utm_source=chatgpt.com)
+https://www.youtube.com/watch?v=qw5XLDT1ch8
+
+### Documentação Completa
+
+https://github.com/Kelvinsantosyz/sysmanage-ti/blob/main/docs/SYSMANAGE-TI.docx
+
+### Repositório Oficial
+
+https://github.com/Kelvinsantosyz/sysmanage-ti
 
 ## 🔐 Variáveis de Ambiente
 
@@ -128,8 +197,6 @@ Crie o arquivo:
 ```bash
 sysmanage-ti/backend/.env
 ```
-
-Com as seguintes variáveis:
 
 ```env
 DB_HOST=localhost
@@ -143,8 +210,6 @@ JWT_SECRET=uma_chave_longa_e_aleatoria
 PORT=3000
 ```
 
----
-
 # ✨ Recursos do Sistema
 
 * Gestão de ativos de TI
@@ -156,6 +221,8 @@ PORT=3000
 * Segurança reforçada
 * Interface responsiva
 * API REST integrada
+* Arquitetura preparada para nuvem AWS
+* Banco de dados com alta disponibilidade
 
 ---
 

@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser')
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
 const sanitizeHtml = require('sanitize-html')
+const { z } = require('zod')
 
 const app = express()
 
@@ -19,14 +20,30 @@ const app = express()
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      defaultSrc:    ["'self'"],
+      // Scripts: apenas desta origem e CDN confiável. Sem 'unsafe-eval'.
+      scriptSrc:     ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      // unsafe-inline necessário para handlers onsubmit/onclick do HTML existente
       scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      connectSrc: ["'self'", "https://cdn.jsdelivr.net"]
+      // Estilos: apenas origens confiáveis
+      styleSrc:      ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
+      fontSrc:       ["'self'", "https://fonts.gstatic.com"],
+      // Imagens: apenas desta origem e data URIs (emojis/ícones embutidos)
+      imgSrc:        ["'self'", "data:"],
+      // Conexões fetch/XHR: servidor + CDN
+      connectSrc:    ["'self'", "https://cdn.jsdelivr.net"],
+      // Bloqueia <object>, <embed>, <frame> e redirecionamentos de form externos
+      objectSrc:     ["'none'"],
+      frameSrc:      ["'none'"],
+      baseUri:       ["'self'"],
+      formAction:    ["'self'"],
     },
+    // Desativa o upgrade automático para não bloquear HTTP local
+    useDefaults: false,
   },
+  // hsts desabilitado em dev — ativar em produção HTTPS
+  hsts: false,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }))
 app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:3000', credentials: true }))
 app.use(express.json())
@@ -51,13 +68,19 @@ function xssSanitizer(req, res, next) {
   next();
 }
 app.use(xssSanitizer)
+/* ------------------------------------------------------------------ 
+   APLICAÇÃO DE LIMITE DE TENTATIVAS DE LOGIN (RATE LIMITING)
+------------------------------------------------------------------ */
 
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  message: { error: "Muitas tentativas de login. Tente novamente mais tarde." },
-  standardHeaders: true,
-  legacyHeaders: false,
+  windowMs: 15 * 60 * 1000, // 15 minutos de janela
+  max: 5, // 🚨 Um usuário real não erra a senha 5 vezes em 15 min.
+  message: {
+    error: "Muitas tentativas de login do seu IP. Por favor, aguarde 15 minutos para tentar novamente."
+  },
+  standardHeaders: true, // Informa o cliente sobre o limite via cabeçalhos RFC
+  legacyHeaders: false,  // Remove cabeçalhos antigos (X-RateLimit-*) para poupar banda
+  skipSuccessfulRequests: true, // 💡 Login bem-sucedido não subtrai do limite
 })
 
 const publicPath = path.resolve(__dirname, '../frontend/public')
@@ -186,10 +209,30 @@ app.put('/api/users/:id/reset-password', authMiddleware, authorizeRoles('admin')
     res.status(500).json({ error: "Erro ao redefinir senha" })
   }
 })
+/* ------------------------------------------------------------------
+   SCHEMAS DE VALIDAÇÃO (Zod)
+   Rejeitam requisições malformadas antes de tocar no banco de dados.
+------------------------------------------------------------------ */
+const loginSchema = z.object({
+  email:    z.string().email("Formato de e-mail inválido."),
+  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres."),
+})
+
+const registerSchema = z.object({
+  name:     z.string().min(2, "Nome deve ter pelo menos 2 caracteres.").max(100),
+  email:    z.string().email("Formato de e-mail inválido."),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres."),
+})
+
 app.post('/api/users', authMiddleware, authorizeRoles('admin'), async (req, res) => {
+  // 🛡️ Validação estrita de dados de criação de usuário
+  const parsed = registerSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.errors[0].message })
+  }
   try {
-    const { name, email, password, role } = req.body
-    if (!name || !email || !password) return res.status(400).json({ error: "Preencha todos os campos" })
+    const { name, email, password } = parsed.data
+    const { role } = req.body
     const allowed = ['admin', 'tecnico', 'leitura']
     const userRole = (role && allowed.includes(role.toLowerCase())) ? role.toLowerCase() : 'leitura'
     const [exists] = await db.query("SELECT id FROM users WHERE email=?", [email])
@@ -204,8 +247,13 @@ app.post('/api/users', authMiddleware, authorizeRoles('admin'), async (req, res)
 
 
 app.post('/api/login', loginLimiter, async (req, res) => {
+  // 🛡️ Validação estrita antes de qualquer operação
+  const parsed = loginSchema.safeParse(req.body)
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.errors[0].message })
+  }
   try {
-    const { email, password } = req.body
+    const { email, password } = parsed.data
     const [rows] = await db.query("SELECT * FROM users WHERE email=?", [email])
     if (rows.length === 0) return res.status(401).json({ error: "Credenciais inválidas" })
 
